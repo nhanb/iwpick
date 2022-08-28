@@ -6,3 +6,6 @@ run:
 
 watch:
 	find . -name '*.go' | entr make run
+
+install:
+	go build -o ~/binaries/iwpick

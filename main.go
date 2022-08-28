@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -93,18 +94,20 @@ func drawListItems(networks []Network, list *tview.List, query string) {
 		itemName := fmt.Sprintf(
 			"[%d]%s %s (%s)", nw.Strength, currentStr, nw.SSID, nw.Security,
 		)
-		list.AddItem(itemName, "", 0, nil)
+		list.AddItem(itemName, nw.SSID, 0, nil)
 	}
 }
 
 func main() {
 	networks := GetNetworks()
-	fmt.Println(networks)
 
 	app := tview.NewApplication().EnableMouse(false)
 
 	input := tview.NewInputField().SetLabel("Filter: ")
+	input.SetFieldBackgroundColor(tcell.ColorBlack)
+	input.SetFieldTextColor(tcell.ColorWhite)
 	list := tview.NewList().ShowSecondaryText(false)
+
 	drawListItems(networks, list, "")
 
 	flex := tview.NewFlex().SetDirection(tview.FlexRow)
@@ -122,6 +125,18 @@ func main() {
 			list.SetCurrentItem(list.GetCurrentItem() + 1)
 		case tcell.KeyEsc:
 			app.Stop()
+		case tcell.KeyEnter:
+			_, ssid := list.GetItemText(list.GetCurrentItem())
+			app.Suspend(func() {
+				cmd := exec.Command("iwctl", "station", "wlan0", "connect", ssid)
+				cmd.Stdout = os.Stdout
+				cmd.Stdin = os.Stdin
+				cmd.Stderr = os.Stderr
+				if err := cmd.Run(); err != nil {
+					log.Fatal(err)
+				}
+				app.Stop()
+			})
 		}
 		return event
 	})
