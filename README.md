@@ -21,6 +21,10 @@ It makes a couple of assumptions:
   WIFI_DEVICE const and run `make` to recompile. Bonus points if you make it a
   [flag][3] and send me a pull request :^)
 
+# License
+
+... is MIT. See LICENSE for the full text.
+
 [1]: https://wiki.archlinux.org/title/iwd
 [2]: https://twitter.com/nhanbt/status/1551734935471284226
 [3]: https://pkg.go.dev/flag
