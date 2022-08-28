@@ -13,6 +13,8 @@ import (
 	"github.com/rivo/tview"
 )
 
+const WIFI_DEVICE = "wlan0"
+
 type Network struct {
 	SSID        string
 	Security    string
@@ -22,12 +24,12 @@ type Network struct {
 }
 
 func GetNetworks() (networks []Network) {
-	scanCmd := exec.Command("iwctl", "station", "wlan0", "scan")
+	scanCmd := exec.Command("iwctl", "station", WIFI_DEVICE, "scan")
 	if err := scanCmd.Run(); err != nil {
 		log.Fatal(err)
 	}
 
-	listCmd := exec.Command("iwctl", "station", "wlan0", "get-networks")
+	listCmd := exec.Command("iwctl", "station", WIFI_DEVICE, "get-networks")
 	var out bytes.Buffer
 	listCmd.Stdout = &out
 	if err := listCmd.Run(); err != nil {
@@ -128,7 +130,7 @@ func main() {
 		case tcell.KeyEnter:
 			_, ssid := list.GetItemText(list.GetCurrentItem())
 			app.Suspend(func() {
-				cmd := exec.Command("iwctl", "station", "wlan0", "connect", ssid)
+				cmd := exec.Command("iwctl", "station", WIFI_DEVICE, "connect", ssid)
 				cmd.Stdout = os.Stdout
 				cmd.Stdin = os.Stdin
 				cmd.Stderr = os.Stderr
