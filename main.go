@@ -78,19 +78,34 @@ func GetNetworks() (networks []Network) {
 	return networks
 }
 
+func drawListItems(networks []Network, list *tview.List, query string) {
+	list.Clear()
+	query = strings.ToLower(query)
+
+	for _, nw := range networks {
+		if query != "" && !strings.Contains(strings.ToLower(nw.SSID), query) {
+			continue
+		}
+		currentStr := ""
+		if nw.IsCurrent {
+			currentStr = " (*)"
+		}
+		itemName := fmt.Sprintf(
+			"[%d]%s %s (%s)", nw.Strength, currentStr, nw.SSID, nw.Security,
+		)
+		list.AddItem(itemName, "", 0, nil)
+	}
+}
+
 func main() {
 	networks := GetNetworks()
 	fmt.Println(networks)
 
-	app := tview.NewApplication()
+	app := tview.NewApplication().EnableMouse(false)
 
 	input := tview.NewInputField().SetLabel("Filter: ")
 	list := tview.NewList().ShowSecondaryText(false)
-	for _, nw := range networks {
-		list.AddItem(
-			fmt.Sprintf("[%d] %s (%s)", nw.Strength, nw.SSID, nw.Security),
-			"", 0, nil)
-	}
+	drawListItems(networks, list, "")
 
 	flex := tview.NewFlex().SetDirection(tview.FlexRow)
 	flex.AddItem(input, 2, 1, true)
@@ -105,8 +120,14 @@ func main() {
 			}
 		case tcell.KeyDown:
 			list.SetCurrentItem(list.GetCurrentItem() + 1)
+		case tcell.KeyEsc:
+			app.Stop()
 		}
 		return event
+	})
+
+	input.SetChangedFunc(func(query string) {
+		drawListItems(networks, list, query)
 	})
 
 	if err := app.SetRoot(flex, true).SetFocus(input).Run(); err != nil {
