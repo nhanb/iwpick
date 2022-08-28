@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -82,15 +83,33 @@ func main() {
 	fmt.Println(networks)
 
 	app := tview.NewApplication()
-	list := tview.NewList().ShowSecondaryText(false)
 
+	input := tview.NewInputField().SetLabel("Filter: ")
+	list := tview.NewList().ShowSecondaryText(false)
 	for _, nw := range networks {
 		list.AddItem(
 			fmt.Sprintf("[%d] %s (%s)", nw.Strength, nw.SSID, nw.Security),
 			"", 0, nil)
 	}
 
-	if err := app.SetRoot(list, true).SetFocus(list).Run(); err != nil {
+	flex := tview.NewFlex().SetDirection(tview.FlexRow)
+	flex.AddItem(input, 2, 1, true)
+	flex.AddItem(list, 0, 1, false)
+
+	input.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyUp:
+			i := list.GetCurrentItem()
+			if i > 0 {
+				list.SetCurrentItem(i - 1)
+			}
+		case tcell.KeyDown:
+			list.SetCurrentItem(list.GetCurrentItem() + 1)
+		}
+		return event
+	})
+
+	if err := app.SetRoot(flex, true).SetFocus(input).Run(); err != nil {
 		panic(err)
 	}
 }
